@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
@@ -21,6 +22,7 @@ class User extends Authenticatable implements JWTSubject
     protected $fillable = [
         'name',
         'email',
+        'role',
         'password',
     ];
 
@@ -56,4 +58,30 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+
+    public function annonces(): HasMany
+    {
+        return $this->hasMany(Annonce::class, 'recruteur_id');
+    }
+
+    public function candidatures(): HasMany
+    {
+        return $this->hasMany(Candidature::class, 'candidat_id');
+    }
+
+    public function isRecruteur(): bool
+    {
+        return $this->role === 'Recruteur';
+    }
+
+    public function isCandidat(): bool
+    {
+        return $this->role === 'Candidat';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'Administrateur';
+    }
+
 }
