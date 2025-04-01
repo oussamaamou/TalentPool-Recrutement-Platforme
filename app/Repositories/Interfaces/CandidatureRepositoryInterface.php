@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Repositories\Interfaces;
 
@@ -12,8 +12,6 @@ interface CandidatureRepositoryInterface
     public function create(array $data): Candidature;
     public function update(int $id, array $data): ?Candidature;
     public function delete(int $id): bool;
-    public function getByCandidat(int $candidatId): Collection;
-    public function getByAnnonce(int $annonceId): Collection;
-    public function updateStatut(int $id, string $statut): ?Candidature;
-    public function getByRecruteurAnnonces(int $recruteurId): Collection;
+    public function getCandidaturesByAnnonce(int $annonceId): Collection;
+    public function getCandidaturesByCandidat(int $candidatId): Collection;
 }
