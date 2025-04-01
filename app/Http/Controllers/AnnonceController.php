@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\Interfaces\AnnonceServiceInterface;
+use App\Models\Annonce;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -60,15 +61,15 @@ class AnnonceController extends Controller
     /**
      * Mettre à jour une annonce existante (réservé aux recruteurs)
      */
-    public function update(UpdateAnnonceRequest $request, int $id): JsonResponse
+    public function update(UpdateAnnonceRequest $request, Annonce $annonce): JsonResponse
     {
-        $updatedAnnonce = $this->annonceService->updateAnnonce($id, $request->validated());
+        $updatedAnnonce = $this->annonceService->updateAnnonce($annonce->id, $request->validated());
         
         return response()->json([
             'message' => 'Annonce mise à jour avec succès',
             'data' => $updatedAnnonce
         ]);
-    }
+    }   
 
     /**
      * Supprimer une annonce (réservé aux recruteurs)
