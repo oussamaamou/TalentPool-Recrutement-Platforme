@@ -6,22 +6,17 @@ use App\Models\Candidature;
 use App\Repositories\Interfaces\CandidatureRepositoryInterface;
 use App\Services\Interfaces\CandidatureServiceInterface;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
 
 class CandidatureService implements CandidatureServiceInterface
 {
     protected $candidatureRepository;
-    protected $notificationService;
 
-    public function __construct(
-        CandidatureRepositoryInterface $candidatureRepository,
-        // NotificationService $notificationService
-    ) {
+    public function __construct(CandidatureRepositoryInterface $candidatureRepository)
+    {
         $this->candidatureRepository = $candidatureRepository;
-        // $this->notificationService = $notificationService;
     }
 
     public function getAllCandidatures(): Collection
@@ -34,31 +29,53 @@ class CandidatureService implements CandidatureServiceInterface
         return $this->candidatureRepository->getById($id);
     }
 
-    public function createCandidature(array $data, ?UploadedFile $document = null): Candidature
+    public function createCandidature(array $data): Candidature
     {
-        if ($document) {
-            $path = $document->store('documents', 'public');
+        $validator = Validator::make($data, [
+            'objet' => 'required|string|max:255',
+            'lettre' => 'required|string',
+            'annonce_id' => 'required|exists:annonces,id',
+            'candidat_id' => 'required|exists:users,id',
+            'document' => 'nullable|file|mimes:pdf,doc,docx|max:5120'
+        ]);
+
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
+        }
+
+        if (isset($data['document']) && $data['document']->isValid()) {
+            $path = $data['document']->store('candidatures', 'public');
             $data['document'] = $path;
         }
 
         return $this->candidatureRepository->create($data);
     }
 
-    public function updateCandidature(int $id, array $data, ?UploadedFile $document = null): ?Candidature
+    public function updateCandidature(int $id, array $data): ?Candidature
     {
+        $validator = Validator::make($data, [
+            'objet' => 'sometimes|required|string|max:255',
+            'lettre' => 'sometimes|required|string',
+            'document' => 'nullable|file|mimes:pdf,doc,docx|max:5120'
+        ]);
+
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
+        }
+
         $candidature = $this->candidatureRepository->getById($id);
         
         if (!$candidature) {
             return null;
         }
 
-        if ($document) {
-            // Delete old document if exists
+        if (isset($data['document']) && $data['document']->isValid()) {
+
             if ($candidature->document) {
                 Storage::disk('public')->delete($candidature->document);
             }
             
-            $path = $document->store('documents', 'public');
+            $path = $data['document']->store('candidatures', 'public');
             $data['document'] = $path;
         }
 
@@ -69,41 +86,37 @@ class CandidatureService implements CandidatureServiceInterface
     {
         $candidature = $this->candidatureRepository->getById($id);
         
-        if ($candidature && $candidature->document) {
+        if (!$candidature) {
+            return false;
+        }
+        
+        if ($candidature->document) {
             Storage::disk('public')->delete($candidature->document);
         }
         
         return $this->candidatureRepository->delete($id);
     }
 
-    public function getCandidaturesByCandidat(int $candidatId): Collection
-    {
-        return $this->candidatureRepository->getByCandidat($candidatId);
-    }
-
     public function getCandidaturesByAnnonce(int $annonceId): Collection
     {
-        return $this->candidatureRepository->getByAnnonce($annonceId);
+        return $this->candidatureRepository->getCandidaturesByAnnonce($annonceId);
     }
 
-    public function updateCandidatureStatut(int $id, string $statut): ?Candidature
+    public function getCandidaturesByCandidat(int $candidatId): Collection
     {
-        $candidature = $this->candidatureRepository->updateStatut($id, $statut);
-        
-        if ($candidature) {
-            // Send notification to the candidate
-            $this->notificationService->notifyCandidatStatusChange(
-                $candidature->candidat, 
-                $candidature->annonce,
-                $statut
-            );
+        return $this->candidatureRepository->getCandidaturesByCandidat($candidatId);
+    }
+
+    public function updateCandidatureStatus(int $id, string $statut): ?Candidature
+    {
+        $validator = Validator::make(['statut' => $statut], [
+            'statut' => 'required|in:En attente,Accepte,Refuse'
+        ]);
+
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
         }
-        
-        return $candidature;
-    }
 
-    public function getCandidaturesByRecruteur(int $recruteurId): Collection
-    {
-        return $this->candidatureRepository->getByRecruteurAnnonces($recruteurId);
+        return $this->candidatureRepository->update($id, ['statut' => $statut]);
     }
 }
