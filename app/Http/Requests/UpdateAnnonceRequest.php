@@ -12,10 +12,9 @@ class UpdateAnnonceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $annonce = $this->route('annonce');
         return Auth::check() && 
-               Auth::user()->role === 'Recruteur' && 
-               $annonce->recruteur_id === Auth::id();
+           Auth::user()->role === 'Recruteur' && 
+           $this->route('annonce')->recruteur_id === Auth::id();
     }
 
     /**
