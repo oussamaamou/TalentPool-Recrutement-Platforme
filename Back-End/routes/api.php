@@ -5,12 +5,14 @@ use App\Http\Controllers\CandidatureController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\StatistiqueController; 
+use App\Http\Controllers\CategorieController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
+Route::get('/categories', [CategorieController::class, 'index']);
 Route::get('/annonces', [AnnonceController::class, 'index']);
 Route::get('/annonces/{id}', [AnnonceController::class, 'show']);
 
@@ -36,6 +38,7 @@ Route::middleware(['auth:api', 'role:Administrateur'])->group(function() {
     
     // Admin statistics
     Route::get('/stats/global', [StatistiqueController::class, 'getGlobalStats']);
+    Route::post('/categories', [CategorieController::class, 'store']);
 });
 
 
