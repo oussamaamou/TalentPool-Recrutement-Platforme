@@ -31,7 +31,6 @@ class AnnonceService implements AnnonceServiceInterface
 
     public function createAnnonce(array $data): Annonce
     {
-
         $validator = Validator::make($data, [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -43,9 +42,26 @@ class AnnonceService implements AnnonceServiceInterface
             throw new ValidationException($validator);
         }
 
-        if (isset($data['thumbnail']) && $data['thumbnail']->isValid()) {
-            $path = $data['thumbnail']->store('thumbnails', 'public');
-            $data['thumbnail'] = $path;
+        if (isset($data['thumbnail']) && !is_string($data['thumbnail'])) {
+
+            if ($data['thumbnail']->isValid()) {
+
+                $storageDir = 'public/thumbnails';
+                if (!Storage::exists($storageDir)) {
+                    Storage::makeDirectory($storageDir);
+                }
+                
+                $fileName = time() . '_' . $data['thumbnail']->getClientOriginalName();
+                $path = $data['thumbnail']->storeAs('thumbnails', $fileName, 'public');
+                
+                if (!$path) {
+                    throw new \Exception('Failed to store the uploaded file');
+                }
+                
+                $data['thumbnail'] = $path;
+            } else {
+                unset($data['thumbnail']);
+            }
         }
 
         return $this->annonceRepository->create($data);
@@ -69,14 +85,30 @@ class AnnonceService implements AnnonceServiceInterface
             throw new ValidationException($validator);
         }
 
-        if (isset($data['thumbnail']) && $data['thumbnail']->isValid()) {
+        if (isset($data['thumbnail']) && !is_string($data['thumbnail'])) {
 
-            if ($annonce->thumbnail) {
-                Storage::disk('public')->delete($annonce->thumbnail);
+            if ($data['thumbnail']->isValid()) {
+
+                if ($annonce->thumbnail && Storage::disk('public')->exists($annonce->thumbnail)) {
+                    Storage::disk('public')->delete($annonce->thumbnail);
+                }
+                
+                $storageDir = 'public/thumbnails';
+                if (!Storage::exists($storageDir)) {
+                    Storage::makeDirectory($storageDir);
+                }
+                
+                $fileName = time() . '_' . $data['thumbnail']->getClientOriginalName();
+                $path = $data['thumbnail']->storeAs('thumbnails', $fileName, 'public');
+                
+                if (!$path) {
+                    throw new \Exception('Failed to store the uploaded file');
+                }
+                
+                $data['thumbnail'] = $path;
+            } else {
+                unset($data['thumbnail']);
             }
-            
-            $path = $data['thumbnail']->store('thumbnails', 'public');
-            $data['thumbnail'] = $path;
         }
 
         return $this->annonceRepository->update($id, $data);
@@ -90,7 +122,7 @@ class AnnonceService implements AnnonceServiceInterface
             return false;
         }
         
-        if ($annonce->thumbnail) {
+        if ($annonce->thumbnail && Storage::disk('public')->exists($annonce->thumbnail)) {
             Storage::disk('public')->delete($annonce->thumbnail);
         }
         
