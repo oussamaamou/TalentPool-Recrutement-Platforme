@@ -65,19 +65,23 @@ class CandidatureController extends Controller
     public function store(StoreCandidatureRequest $request): JsonResponse
     {
         $data = $request->validated();
+        
         $data['candidat_id'] = Auth::id();
         
-        if ($request->hasFile('document') && $request->file('document')->isValid()) {
-            $path = $request->file('document')->store('candidatures', 'public');
-            $data['document'] = $path;
+        
+        try {
+            $candidature = $this->candidatureService->createCandidature($data);
+            
+            return response()->json([
+                'message' => 'Candidature créée avec succès',
+                'data' => $candidature
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Échec de la création de la candidature',
+                'errors' => ['document' => [$e->getMessage()]]
+            ], 422);
         }
-        
-        $candidature = $this->candidatureService->createCandidature($data);
-        
-        return response()->json([
-            'message' => 'Candidature créée avec succès',
-            'data' => $candidature
-        ], 201);
     }
 
     public function update(UpdateCandidatureRequest $request, Candidature $candidature): JsonResponse
@@ -86,12 +90,22 @@ class CandidatureController extends Controller
             return response()->json(['message' => 'Non autorisé'], 403);
         }
         
-        $updatedCandidature = $this->candidatureService->updateCandidature($candidature->id, $request->validated());
-        
-        return response()->json([
-            'message' => 'Candidature mise à jour avec succès',
-            'data' => $updatedCandidature
-        ]);
+        try {
+            $updatedCandidature = $this->candidatureService->updateCandidature(
+                $candidature->id, 
+                $request->validated()
+            );
+            
+            return response()->json([
+                'message' => 'Candidature mise à jour avec succès',
+                'data' => $updatedCandidature
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Échec de la mise à jour de la candidature',
+                'errors' => ['document' => [$e->getMessage()]]
+            ], 422);
+        }
     }
 
     public function destroy(int $id): JsonResponse
