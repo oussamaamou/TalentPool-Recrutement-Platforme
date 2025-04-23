@@ -26,7 +26,21 @@ class StoreCandidatureRequest extends FormRequest
             'objet' => 'required|string|max:255',
             'lettre' => 'required|string',
             'annonce_id' => 'required|exists:annonces,id',
-            'document' => 'nullable|file|mimes:pdf,doc,docx|max:5120'
+            'document' => 'nullable|file|mimes:pdf,doc,docx|max:5120' // 5MB max
+        ];
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'document.file' => 'Le document doit être un fichier.',
+            'document.mimes' => 'Le document doit être un fichier de type: pdf, doc, docx.',
+            'document.max' => 'La taille du document ne doit pas dépasser 5 Mo.',
         ];
     }
 }

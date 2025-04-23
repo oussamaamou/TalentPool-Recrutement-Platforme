@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 
 class CandidatureService implements CandidatureServiceInterface
 {
@@ -31,20 +32,29 @@ class CandidatureService implements CandidatureServiceInterface
 
     public function createCandidature(array $data): Candidature
     {
+        // First validate without file validation
         $validator = Validator::make($data, [
             'objet' => 'required|string|max:255',
             'lettre' => 'required|string',
             'annonce_id' => 'required|exists:annonces,id',
             'candidat_id' => 'required|exists:users,id',
-            'document' => 'nullable|file|mimes:pdf,doc,docx|max:5120'
         ]);
 
         if ($validator->fails()) {
             throw new ValidationException($validator);
         }
 
-        if (isset($data['document']) && $data['document']->isValid()) {
-            $path = $data['document']->store('candidatures', 'public');
+        if (isset($data['document']) && $data['document'] instanceof UploadedFile) {
+            
+            $fileValidator = Validator::make(['document' => $data['document']], [
+                'document' => 'required|file|mimes:pdf,doc,docx|max:5120'
+            ]);
+
+            if ($fileValidator->fails()) {
+                throw new ValidationException($fileValidator);
+            }
+
+            $path = $data['document']->store('document', 'public');
             $data['document'] = $path;
         }
 
@@ -56,7 +66,6 @@ class CandidatureService implements CandidatureServiceInterface
         $validator = Validator::make($data, [
             'objet' => 'sometimes|required|string|max:255',
             'lettre' => 'sometimes|required|string',
-            'document' => 'nullable|file|mimes:pdf,doc,docx|max:5120'
         ]);
 
         if ($validator->fails()) {
@@ -69,13 +78,21 @@ class CandidatureService implements CandidatureServiceInterface
             return null;
         }
 
-        if (isset($data['document']) && $data['document']->isValid()) {
+        if (isset($data['document']) && $data['document'] instanceof UploadedFile) {
+
+            $fileValidator = Validator::make(['document' => $data['document']], [
+                'document' => 'required|file|mimes:pdf,doc,docx|max:5120'
+            ]);
+
+            if ($fileValidator->fails()) {
+                throw new ValidationException($fileValidator);
+            }
 
             if ($candidature->document) {
                 Storage::disk('public')->delete($candidature->document);
             }
             
-            $path = $data['document']->store('candidatures', 'public');
+            $path = $data['document']->store('document', 'public');
             $data['document'] = $path;
         }
 

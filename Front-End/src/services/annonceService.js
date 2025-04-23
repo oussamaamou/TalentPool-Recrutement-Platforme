@@ -1,25 +1,21 @@
 import apiClient from './apiClient';
 
 const annonceService = {
-  // Afficher toutes les Annonces
   getAnnonces: async () => {
     return await apiClient.get('/annonces');
   },
   
-  // Afficher les details d'une Annonce
   getAnnonceById: async (id) => {
     return await apiClient.get(`/annonces/${id}`);
   },
   
-  // Afficher mes Annonces
   getMesAnnonces: async () => {
     return await apiClient.get('/mes-annonces');
   },
   
-  // Creer une Annonce
   createAnnonce: async (annonceData) => {
-
     const formData = new FormData();
+    
     for (const key in annonceData) {
       formData.append(key, annonceData[key]);
     }
@@ -31,10 +27,9 @@ const annonceService = {
     });
   },
   
-  // Modifier une Annonce
   updateAnnonce: async (id, annonceData) => {
-
     const formData = new FormData();
+    
     for (const key in annonceData) {
       formData.append(key, annonceData[key]);
     }
@@ -48,7 +43,6 @@ const annonceService = {
     });
   },
   
-  // Supprimer une Annonce
   deleteAnnonce: async (id) => {
     return await apiClient.delete(`/annonces/${id}`);
   }
