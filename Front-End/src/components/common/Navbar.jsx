@@ -22,7 +22,6 @@ const Navbar = () => {
     setIsProfileOpen(!isProfileOpen);
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
@@ -37,7 +36,7 @@ const Navbar = () => {
   }, []);
   
   return (
-    <nav className="bg-gradient-to-r from-purple-800 to-purple-600 text-white shadow-lg">
+    <nav className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-3">
           <Link to="/" className="flex items-center space-x-2">
@@ -47,7 +46,7 @@ const Navbar = () => {
             <span className="text-2xl font-bold tracking-tight">Talent Pool</span>
           </Link>
           
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu */}
           <button 
             className="md:hidden flex items-center focus:outline-none" 
             onClick={toggleMenu}
@@ -69,7 +68,7 @@ const Navbar = () => {
             </svg>
           </button>
           
-          {/* Desktop Navigation */}
+          {/* Desktop menu button */}
           <div className="hidden md:flex items-center space-x-6">
             <Link to="/" className="text-white hover:text-purple-200 transition-colors duration-200 font-medium">Accueil</Link>
             
@@ -96,7 +95,7 @@ const Navbar = () => {
                   </>
                 )}
                 
-                {/* Profile dropdown with click functionality */}
+                {/* Profile dropdown*/}
                 <div className="relative" ref={profileMenuRef}>
                   <button 
                     className="flex items-center space-x-1 bg-purple-700/40 hover:bg-purple-700/60 px-3 py-2 rounded-full transition-all duration-200"
@@ -151,7 +150,7 @@ const Navbar = () => {
           </div>
         </div>
         
-        {/* Mobile Navigation */}
+        {/* Mobile menu */}
         {isMenuOpen && (
           <div className="md:hidden py-3 border-t border-purple-500/50 animate-fadeIn">
             <Link to="/" className="block py-2 px-3 rounded-md hover:bg-purple-700/40 transition-colors duration-200">Accueil</Link>
