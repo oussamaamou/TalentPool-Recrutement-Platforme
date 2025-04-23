@@ -20,6 +20,10 @@ class ForgotPasswordController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
         $user = User::where('email', $request->email)->first();
         
         if (!$user) {
@@ -29,7 +33,7 @@ class ForgotPasswordController extends Controller
         $token = Password::createToken($user);
         
         return response()->json([
-            'message' => 'Reset token generated',
+            'message' => 'Reset link sent',
             'token' => $token,
             'email' => $user->email
         ]);
